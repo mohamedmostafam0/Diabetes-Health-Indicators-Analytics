@@ -127,7 +127,9 @@ num_vars <- diabetes_df_specific %>%
     MentHlth = as.numeric(MentHlth),
     GenHlth = as.numeric(GenHlth)
   )
+
 cor_mat <- cor(num_vars)
+
 # Convert correlation matrix to long format using tidyverse
 cor_long <- cor_mat %>%
   as.data.frame() %>%
@@ -137,11 +139,13 @@ cor_long <- cor_mat %>%
 p9 <- ggplot(cor_long, aes(x = Var1, y = Var2, fill = value)) +
   geom_tile() +
   scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
-  geom_text(aes(label = value), size = 3) +
+  geom_text(aes(label = round(value, 2)), size = 3) + # Round to 2 decimal places
   labs(title = "Correlation Heatmap") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.text.y = element_text(vjust = 0.5))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(vjust = 0.5)
+  )
 
 ggsave("outputs/plots/8_heatmap_corr.png", p9, width = 5, height = 5)
 # ============================================================
@@ -166,29 +170,3 @@ p10 <- ggplot(assoc, aes(x = reorder(variable, cramers_v), y = cramers_v)) +
   labs(x = "Predictor", y = "Cramer's V (Association Strength)", title = "Univariate Association with Diabetes") +
   theme_minimal()
 ggsave("outputs/plots/9_bar_association.png", p10, width = 6, height = 4)
-
-# ============================================================
-# 10. Stacked Bar: Education vs Diabetes (H5)
-# Justification: Education often correlates with health literacy.
-# Observation: Diabetes prevalence drops as education increases.
-# Interpretation: Socioeconomic factors are key determinants.
-# ============================================================
-p11 <- ggplot(diabetes_df_specific, aes(x = factor(Education), fill = Diabetes_Label)) +
-  geom_bar(position = "fill") +
-  scale_fill_manual(values = c("Healthy" = "skyblue", "Pre-diabetic" = "orange", "Diabetic" = "red")) +
-  labs(x = "Education Level (1=Lowest, 6=Highest)", y = "Proportion", title = "Diabetes Status by Education Level") +
-  theme_minimal()
-ggsave("outputs/plots/10_bar_education_diabetes.png", p11, width = 6, height = 4)
-
-# ============================================================
-# 11. Bar Chart: High Cholesterol vs Diabetes (H6)
-# Justification: Cholesterol is a major metabolic risk factor.
-# Observation: High cholesterol group has much higher diabetes rates.
-# Interpretation: Strong metabolic link between lipids and glucose regulation.
-# ============================================================
-p12 <- ggplot(diabetes_df_specific, aes(x = factor(HighChol), fill = Diabetes_Label)) +
-  geom_bar(position = "fill") +
-  scale_fill_manual(values = c("Healthy" = "skyblue", "Pre-diabetic" = "orange", "Diabetic" = "red")) +
-  labs(x = "High Cholesterol (0=No, 1=Yes)", y = "Proportion", title = "Diabetes Status by High Cholesterol") +
-  theme_minimal()
-ggsave("outputs/plots/11_bar_highchol_diabetes.png", p12, width = 6, height = 4)

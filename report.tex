@@ -1,0 +1,1025 @@
+%===============================================================================
+% BIG DATA ANALYTICS PROJECT REPORT
+% Diabetes Health Indicators Analysis - CDC BRFSS 2015
+%===============================================================================
+\documentclass[12pt,a4paper]{article}
+
+%--- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{listings}
+\usepackage{parskip}
+
+%--- Page Style ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Diabetes Health Indicators Analysis}
+\fancyhead[R]{\small Big Data Analytics Project}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%--- Hyperlinks ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    urlcolor=blue!70!black,
+    citecolor=blue!70!black
+}
+
+%--- Title Formatting ---
+\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+
+%--- Custom Commands ---
+\newcommand{\projecttitle}{Diabetes Health Indicators Analysis}
+\newcommand{\datasetsource}{CDC BRFSS 2015}
+
+%===============================================================================
+\begin{document}
+
+%--- Title Page ---
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge\bfseries \projecttitle \par}
+    \vspace{0.5cm}
+    {\Large A Big Data Analytics Approach to Population-Level Diabetes Risk Stratification\par}
+    
+    \vspace{2cm}
+    
+    {\large\textbf{Dataset:} \datasetsource{} -- Behavioral Risk Factor Surveillance System\par}
+    
+    \vspace{1.5cm}
+
+        {\large\textbf{Team Members}\par}
+    \vspace{0.5cm}
+    \begin{tabular}{ll}
+        Youssef Adel Albert & 21P0258 \\
+        Omar Baher Hussein & 21P0315 \\
+        Mohamed Mostafa Mamdouh & 21P0244 \\
+        Ali Tarek Abdelmonim & 21P0123 \\
+        Andrea Aziz Fathy & 23P0379 \\
+        Fady Osama Mounir & 23P0223 \\
+    \end{tabular}
+
+
+    {\large Big Data Analytics Course Project\par}
+    \vspace{0.5cm}
+    {\large Fall 2026\par}
+    
+    \vfill
+    
+    {\large \today\par}
+\end{titlepage}
+
+%--- Table of Contents ---
+\tableofcontents
+\newpage
+
+%===============================================================================
+\section{Project Description}
+%===============================================================================
+
+\subsection{Overview}
+This project applies \textbf{Big Data Analytics} techniques to the \textbf{CDC Diabetes Health Indicators Dataset} from the Behavioral Risk Factor Surveillance System (BRFSS) 2015 survey. The primary objective is to identify key lifestyle, behavioral, and demographic risk factors associated with diabetes and to build predictive models that can stratify diabetes risk without requiring invasive clinical laboratory tests.
+
+Diabetes mellitus is a chronic metabolic disorder affecting millions worldwide, and early identification of at-risk individuals is critical for preventive healthcare interventions. This project leverages population-level survey data to uncover patterns and associations that can inform public health strategies.
+
+\subsection{Project Pipeline}
+The analysis is structured into a modular, reproducible pipeline consisting of:
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+    \item \textbf{Data Understanding:} Loading, exploring, and summarizing the dataset
+    \item \textbf{Data Preprocessing:} Cleaning, validation, and feature engineering
+    \item \textbf{Hypothesis Testing:} Statistical validation of risk factor associations
+    \item \textbf{Exploratory Data Analysis:} Visualization of patterns and relationships
+    \item \textbf{Modeling:} Predictive analytics using multiple machine learning techniques
+\end{enumerate}
+
+\subsection{Technologies Used}
+The entire analysis is implemented in \textbf{R} using the following key packages:
+\begin{itemize}
+    \item \texttt{tidyverse} -- Data manipulation and visualization (ggplot2, dplyr, readr)
+    \item \texttt{caret} -- Data splitting, preprocessing, model evaluation
+    \item \texttt{rpart} -- Decision tree classification (ID3/CART algorithm)
+    \item \texttt{arules} -- Apriori association rule mining
+    \item \texttt{nnet} -- Multinomial logistic regression
+    \item \texttt{ROSE} -- Handling class imbalance
+    \item \texttt{pROC} -- ROC/AUC evaluation metrics
+\end{itemize}
+
+\newpage
+%===============================================================================
+\section{Dataset and Variables Description}
+%===============================================================================
+
+\subsection{Data Source}
+\begin{itemize}
+    \item \textbf{Source:} UCI Machine Learning Repository / CDC BRFSS
+    \item \textbf{Original Survey:} Behavioral Risk Factor Surveillance System (BRFSS) 2015
+    \item \textbf{URL:} \url{https://archive.ics.uci.edu/dataset/891/cdc+diabetes+health+indicators}
+\end{itemize}
+
+\subsection{Dataset Characteristics}
+\begin{table}[H]
+\centering
+\caption{Dataset Overview}
+\begin{tabular}{ll}
+\toprule
+\textbf{Attribute} & \textbf{Value} \\
+\midrule
+Number of Instances & 253,680 \\
+Number of Features & 22 (13 selected for analysis) \\
+Data Type & Survey responses (self-reported) \\
+Target Variable & Diabetes\_012 (3 classes) \\
+Missing Values & None \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Target Variable}
+The target variable \texttt{Diabetes\_012} represents the diabetes status:
+\begin{itemize}
+    \item \textbf{0 = Healthy:} No diabetes diagnosis
+    \item \textbf{1 = Pre-diabetic:} Diagnosed with pre-diabetes
+    \item \textbf{2 = Diabetic:} Diagnosed with diabetes
+\end{itemize}
+
+\subsection{Feature Variables}
+Table~\ref{tab:features} provides a detailed description of all features used in the analysis.
+
+\begin{longtable}{p{2.5cm}p{1.8cm}p{4.5cm}p{4cm}}
+\caption{Feature Variables Description} \label{tab:features} \\
+\toprule
+\textbf{Variable} & \textbf{Type} & \textbf{Encoding} & \textbf{Clinical Relevance} \\
+\midrule
+\endfirsthead
+\multicolumn{4}{c}{\textit{(continued from previous page)}} \\
+\toprule
+\textbf{Variable} & \textbf{Type} & \textbf{Encoding} & \textbf{Clinical Relevance} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\textit{(continued on next page)}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+HighBP & Binary & 1=Yes, 0=No & Strong comorbidity with diabetes \\
+HighChol & Binary & 1=Yes, 0=No & Metabolic syndrome link \\
+BMI & Continuous & Body Mass Index (kg/m²) & Key modifiable risk factor \\
+Smoker & Binary & 1=≥100 cigarettes lifetime & Oxidative stress contributor \\
+PhysHlth & Ordinal & Days with poor physical health (0--30) & Proxy for physical morbidity \\
+MentHlth & Ordinal & Days with poor mental health (0--30) & Psychosocial risk factor \\
+PhysActivity & Binary & 1=Physical activity in past 30 days & Protective behavior \\
+Fruits & Binary & 1=Ate fruit ≥1x/day & Diet quality indicator \\
+Veggies & Binary & 1=Ate vegetables ≥1x/day & Diet quality indicator \\
+GenHlth & Ordinal & 1=Excellent to 5=Poor & Self-rated health predictor \\
+Age & Ordinal & 1=18--24 to 13=80+ & Non-modifiable risk factor \\
+Education & Ordinal & 1=No school to 6=College grad & Socioeconomic proxy \\
+\end{longtable}
+
+\newpage
+%===============================================================================
+\section{Problem Definition and Project Objectives}
+%===============================================================================
+
+\subsection{Scientific Problem Statement}
+\begin{quote}
+\textit{``Can self-reported lifestyle and demographic indicators be used to stratify diabetes risk in population-level surveys---without requiring invasive clinical laboratory tests?''}
+\end{quote}
+
+This question is significant for public health because:
+\begin{itemize}
+    \item Clinical tests (e.g., HbA1c, fasting glucose) are costly and require healthcare access
+    \item Population-level screening using survey data can identify high-risk groups for targeted interventions
+    \item Modifiable risk factors can be addressed through behavioral interventions
+\end{itemize}
+
+\subsection{Data Science Objectives}
+
+\begin{enumerate}[label=\textbf{O\arabic*.}]
+    \item \textbf{Explore Associations:} Investigate relationships between modifiable behaviors (smoking, physical activity, diet) and diabetes status using visualization and summary statistics.
+    
+    \item \textbf{Test Statistical Hypotheses:} Rigorously validate whether key risk factors (e.g., high blood pressure, BMI, age) are significantly associated with diabetes status.
+    
+    \item \textbf{Build Predictive Models:} Develop interpretable models (Decision Trees, Association Rules) and probabilistic models (Logistic Regression) for risk stratification.
+    
+    \item \textbf{Identify Actionable Insights:} Determine the top 3 modifiable risk factors that can be targeted for public health interventions.
+    
+    \item \textbf{Evaluate Model Performance:} Assess models using appropriate metrics (Accuracy, Sensitivity, Specificity, AUC, F1-Score).
+\end{enumerate}
+
+\newpage
+%===============================================================================
+\section{Data Cleaning and Transformation Methods}
+%===============================================================================
+
+\subsection{Data Quality Assessment}
+Before analysis, the dataset was thoroughly examined for quality issues:
+
+\subsubsection{Missing Values Check}
+\begin{verbatim}
+Missing values per column:
+HighBP: 0  |  HighChol: 0  |  BMI: 0  |  Smoker: 0
+PhysHlth: 0  |  MentHlth: 0  |  PhysActivity: 0
+Fruits: 0  |  Veggies: 0  |  GenHlth: 0  |  Age: 0
+Education: 0  |  Diabetes_012: 0
+\end{verbatim}
+\textbf{Result:} No missing values detected in any of the selected features.
+
+\subsubsection{Range Validation}
+\begin{itemize}
+    \item \textbf{BMI Range:} 12 to 98 (within acceptable limits)
+    \item \textbf{PhysHlth Range:} 0 to 30 days (valid)
+    \item \textbf{MentHlth Range:} 0 to 30 days (valid)
+    \item \textbf{Illogical BMI Values} ($<12$ or $>100$): 0 rows
+\end{itemize}
+
+\subsubsection{Binary Variables Validation}
+All binary variables (HighBP, HighChol, Smoker, PhysActivity, Fruits, Veggies) were confirmed to contain only valid values (0 or 1).
+
+\subsection{Data Transformations Applied}
+
+\subsubsection{Type Conversions}
+The following variables were converted to factors for proper categorical handling:
+\begin{itemize}
+    \item \texttt{GenHlth} $\rightarrow$ Factor (ordinal: 1--5)
+    \item \texttt{Age} $\rightarrow$ Factor (ordinal: 1--13)
+    \item \texttt{Education} $\rightarrow$ Factor (ordinal: 1--6)
+    \item \texttt{Diabetes\_012} $\rightarrow$ Factor (target)
+\end{itemize}
+
+\subsubsection{Label Creation}
+A descriptive label variable \texttt{Diabetes\_Label} was created:
+\begin{verbatim}
+    0 -> "Healthy"
+    1 -> "Pre-diabetic"
+    2 -> "Diabetic"
+\end{verbatim}
+
+\subsubsection{Duplicate Removal}
+\begin{itemize}
+    \item Duplicated rows identified and removed
+    \item This ensures each observation represents a unique survey response
+\end{itemize}
+
+\subsection{Class Imbalance Handling}
+The target variable exhibits significant class imbalance:
+\begin{table}[H]
+\centering
+\caption{Class Distribution in Target Variable}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Class} & \textbf{Count} & \textbf{Percentage} \\
+\midrule
+Healthy (0) & 146,802 & 79.67\% \\
+Pre-diabetic (1) & 4,564 & 2.48\% \\
+Diabetic (2) & 32,946 & 17.88\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Solution:} For the Decision Tree model, the \texttt{ROSE} (Random Over-Sampling Examples) package was used to balance the training data, preventing the model from being biased toward the majority class.
+
+\newpage
+%===============================================================================
+\section{Hypothesis Testing: Results and Interpretations}
+%===============================================================================
+
+Six hypotheses were formulated and tested to statistically validate the relationships between risk factors and diabetes status.
+
+\subsection{H1: High Blood Pressure and Diabetes Association}
+
+\begin{table}[H]
+\centering
+\caption{H1: Contingency Table -- HighBP vs Diabetes Status}
+\begin{tabular}{lccc}
+\toprule
+\textbf{HighBP} & \textbf{Healthy (0)} & \textbf{Pre-diabetic (1)} & \textbf{Diabetic (2)} \\
+\midrule
+No (0) & 85,795 & 1,703 & 8,415 \\
+Yes (1) & 61,007 & 2,861 & 24,531 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Test:} Chi-square test of independence
+
+\textbf{Hypotheses:}
+\begin{itemize}
+    \item $H_0$: Diabetes status is independent of high blood pressure
+    \item $H_1$: There is an association between high blood pressure and diabetes
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}
+    \item Chi-square statistic: $\chi^2 = 12,076.46$
+    \item Degrees of freedom: 2
+    \item p-value: $< 2.2 \times 10^{-16}$
+    \item Diabetic prevalence: HighBP=No: $8.8\%$, HighBP=Yes: $27.8\%$
+\end{itemize}
+
+\textbf{Conclusion:} \textcolor{red}{\textbf{Reject $H_0$}}. There is a highly significant association between high blood pressure and diabetes status. Individuals with high blood pressure have approximately 3 times higher diabetic prevalence.
+
+%--- H2 ---
+\subsection{H2: BMI Differences Across Diabetes Groups}
+
+\textbf{Test:} Kruskal-Wallis test (non-parametric, robust to non-normality)
+
+\textbf{Hypotheses:}
+\begin{itemize}
+    \item $H_0$: $\mu_{\text{Healthy}} = \mu_{\text{Pre-diabetic}} = \mu_{\text{Diabetic}}$
+    \item $H_1$: At least one group median differs
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}
+    \item Kruskal-Wallis H statistic: $H = 8,561.28$
+    \item p-value: $< 2.2 \times 10^{-16}$
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Median BMI by Diabetes Status}
+\begin{tabular}{lc}
+\toprule
+\textbf{Diabetes Status} & \textbf{Median BMI} \\
+\midrule
+Healthy & 27 \\
+Pre-diabetic & 30 \\
+Diabetic & 31 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Conclusion:} \textcolor{red}{\textbf{Reject $H_0$}}. BMI distributions differ significantly across groups, with a clear graded relationship---higher BMI correlates with increasing diabetes severity.
+
+%--- H3 ---
+\subsection{H3: Physical Activity Reduces Diabetes Risk}
+
+\textbf{Test:} Chi-square test
+
+\textbf{Hypotheses:}
+\begin{itemize}
+    \item $H_0$: Diabetic prevalence is the same in active and inactive groups
+    \item $H_1$: Physical activity is associated with lower diabetes prevalence
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}
+    \item Chi-square statistic: $\chi^2 = 1,132.39$
+    \item p-value: $< 2.2 \times 10^{-16}$
+    \item Diabetic prevalence: Inactive: $22.3\%$, Active: $15.9\%$
+\end{itemize}
+
+\textbf{Conclusion:} \textcolor{red}{\textbf{Reject $H_0$}}. Physical activity is significantly associated with lower diabetes prevalence. This is a modifiable risk factor that can be targeted for intervention.
+
+%--- H4 ---
+\subsection{H4: Age Trend in Diabetes Prevalence}
+
+\textbf{Test:} Kruskal-Wallis test + Spearman correlation
+
+\textbf{Hypotheses:}
+\begin{itemize}
+    \item $H_0$: No trend between age and diabetes status
+    \item $H_1$: Diabetes prevalence increases with age
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}
+    \item Kruskal-Wallis H statistic: $H = 7,396.8$, p-value: $< 2.2 \times 10^{-16}$
+    \item Spearman $\rho = 0.20$, p-value: $< 2.2 \times 10^{-16}$
+\end{itemize}
+
+\textbf{Conclusion:} \textcolor{red}{\textbf{Reject $H_0$}}. There is a significant positive correlation between age and diabetes status. Prevalence increases monotonically with age, peaking in the 80+ age group.
+
+%--- H5 ---
+\subsection{H5: Education Level and Diabetes Risk}
+
+\textbf{Test:} Chi-square test
+
+\textbf{Hypotheses:}
+\begin{itemize}
+    \item $H_0$: Diabetes prevalence is independent of education level
+    \item $H_1$: Higher education is associated with lower diabetes risk
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}
+    \item Chi-square statistic: $\chi^2 = 1,702.66$
+    \item p-value: $< 2.2 \times 10^{-16}$
+\end{itemize}
+
+\textbf{Observation:} Diabetic prevalence decreases from $27.2\%$ in lowest education levels to $14.1\%$ in college graduates.
+
+\textbf{Conclusion:} \textcolor{red}{\textbf{Reject $H_0$}}. Education level has a protective effect—higher education correlates with lower diabetes prevalence, likely through improved health literacy and access to resources.
+
+%--- H6 ---
+\subsection{H6: High Cholesterol and Diabetes Association}
+
+\textbf{Test:} Chi-square test
+
+\textbf{Hypotheses:}
+\begin{itemize}
+    \item $H_0$: Diabetic prevalence is the same for normal and high cholesterol
+    \item $H_1$: High cholesterol is associated with higher diabetes prevalence
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}
+    \item Chi-square statistic: $\chi^2 = 7,273.01$
+    \item p-value: $< 2.2 \times 10^{-16}$
+    \item Diabetic prevalence: Normal: $11.2\%$, High: $25.6\%$
+\end{itemize}
+
+\textbf{Conclusion:} \textcolor{red}{\textbf{Reject $H_0$}}. High cholesterol is strongly associated with diabetes, consistent with metabolic syndrome pathophysiology.
+
+\subsection{Summary of Hypothesis Testing}
+\begin{table}[H]
+\centering
+\caption{Summary of All Hypothesis Tests}
+\begin{tabular}{clcl}
+\toprule
+\textbf{Hypothesis} & \textbf{Test Used} & \textbf{p-value} & \textbf{Decision} \\
+\midrule
+H1: HighBP & Chi-square & $<0.001$ & Reject $H_0$ \\
+H2: BMI & Kruskal-Wallis & $<0.001$ & Reject $H_0$ \\
+H3: Physical Activity & Chi-square & $<0.001$ & Reject $H_0$ \\
+H4: Age & Kruskal-Wallis + Spearman & $<0.001$ & Reject $H_0$ \\
+H5: Education & Chi-square & $<0.001$ & Reject $H_0$ \\
+H6: HighChol & Chi-square & $<0.001$ & Reject $H_0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All six hypotheses were statistically significant at $\alpha = 0.05$, confirming that the selected risk factors have meaningful associations with diabetes status.
+
+\newpage
+%===============================================================================
+\section{Data Visualization: Graphics and Interpretations}
+%===============================================================================
+
+\subsection{Plot 1: Diabetes Status by High Blood Pressure (H1)}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{1_bar_highbp_diabetes.png}
+\caption{Stacked Bar Chart: Proportion of Diabetes Status by High Blood Pressure}
+\label{fig:highbp}
+\end{figure}
+
+\textbf{Observation:} The proportion of diabetic individuals (red) is substantially higher in the HighBP=1 group compared to HighBP=0. The healthy proportion (blue) correspondingly decreases.
+
+\textbf{Interpretation:} High blood pressure is strongly associated with diabetes—this supports H1 and suggests that blood pressure management is critical for diabetes prevention.
+
+%---
+\subsection{Plot 2: BMI Distribution by Diabetes Status (H2)}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{2_box_bmi_diabetes.png}
+\caption{Boxplot: BMI Distribution Across Diabetes Status Groups}
+\label{fig:bmi}
+\end{figure}
+
+\textbf{Observation:} A clear graded relationship is visible—median BMI increases from Healthy ($27$) to Pre-diabetic ($30$) to Diabetic ($31$). The interquartile ranges show minimal overlap.
+
+\textbf{Interpretation:} BMI is an excellent discriminating feature for diabetes risk stratification. Weight management is a key modifiable intervention target.
+
+%---
+\subsection{Plot 3: Diabetic Prevalence by Physical Activity (H3)}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{3_bar_physact_diabetes.png}
+\caption{Bar Chart: Diabetic Prevalence by Physical Activity Status}
+\label{fig:physact}
+\end{figure}
+
+\textbf{Observation:} Inactive individuals (PhysActivity=0) have nearly double the diabetic prevalence ($\approx 22\%$) compared to active individuals ($\approx 12\%$).
+
+\textbf{Interpretation:} Physical activity has a significant protective effect. Public health programs promoting exercise can reduce population-level diabetes burden.
+
+%---
+\subsection{Plot 4: Diabetic Prevalence by Age Group (H4)}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{4_line_age_diabetes.png}
+\caption{Line Plot: Diabetic Prevalence Trend Across Age Groups}
+\label{fig:age}
+\end{figure}
+
+\textbf{Observation:} Diabetic prevalence shows a monotonic increase with age, starting near 0\% for ages 18--24 and reaching approximately 25\% for ages 80+.
+
+\textbf{Interpretation:} Age is a strong non-modifiable risk factor. Targeted screening for older adults ($>50$) is warranted.
+
+%---
+\subsection{Plot 5: Physical vs Mental Health Days (Scatter)}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{5_scatter_phys_ment.png}
+\caption{Scatter Plot: Poor Physical Health Days vs Poor Mental Health Days}
+\label{fig:scatter}
+\end{figure}
+
+\textbf{Observation:} Diabetic individuals (red) cluster in regions with higher values of both physical and mental poor health days. A concentration is visible in the (0,0) region for all groups.
+
+\textbf{Interpretation:} Diabetes is associated with both physical and mental health burden. Holistic care approaches addressing mental health may improve outcomes.
+
+%---
+\subsection{Plot 6: Diabetes Status by Smoking Status}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{6_bar_smoker_diabetes.png}
+\caption{Stacked Bar: Diabetes Status by Smoking Status}
+\label{fig:smoker}
+\end{figure}
+
+\textbf{Observation:} The diabetic proportion is slightly higher among smokers, but the difference is less pronounced than for BP or BMI.
+
+\textbf{Interpretation:} Smoking is a modest risk factor for diabetes. While still significant, it has weaker predictive power compared to HighBP or HighChol.
+
+%---
+\subsection{Plot 7: Healthy Eating Habits by Diabetes Status}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{7_bar_diet_diabetes.png}
+\caption{Grouped Bar: Fruit and Vegetable Consumption by Diabetes Status}
+\label{fig:diet}
+\end{figure}
+
+\textbf{Observation:} Healthy individuals have slightly higher percentages of daily fruit and vegetable consumption compared to diabetic individuals.
+
+\textbf{Interpretation:} Diet quality correlates with diabetes status, though the effect size is moderate. Dietary interventions should be part of comprehensive prevention strategies.
+
+%---
+\subsection{Plot 8: Correlation Heatmap}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{8_heatmap_corr.png}
+\caption{Correlation Matrix Heatmap of Numeric Features}
+\label{fig:heatmap}
+\end{figure}
+
+\textbf{Observation:} Key correlations include:
+\begin{itemize}
+    \item \texttt{PhysHlth} $\leftrightarrow$ \texttt{MentHlth}: Moderate positive correlation
+    \item \texttt{GenHlth} shows correlations with multiple features
+    \item No extreme multicollinearity ($|r| > 0.9$) detected
+\end{itemize}
+
+\textbf{Interpretation:} Features are sufficiently independent for modeling. Tree-based models can handle moderate correlations, but logistic regression benefits from this lack of multicollinearity.
+
+%---
+\subsection{Plot 9: Univariate Association Strength (Cramér's V)}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{9_bar_association.png}
+\caption{Bar Chart: Cramér's V Association Strength with Diabetes}
+\label{fig:association}
+\end{figure}
+
+\textbf{Observation:} HighBP and HighChol show the highest Cramér's V values, followed by PhysActivity. Fruits and Veggies show weaker associations.
+
+\textbf{Interpretation:} This ranking guides feature prioritization for modeling. HighBP and HighChol should be prioritized in Apriori rules and Decision Tree splits.
+
+%---
+\subsection{Plots 10--11: Education and Cholesterol}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{10_bar_education_diabetes.png}
+    \caption{Diabetes by Education Level}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{11_bar_highchol_diabetes.png}
+    \caption{Diabetes by High Cholesterol}
+\end{subfigure}
+\caption{Additional Visualizations: Education and Cholesterol Effects}
+\label{fig:edu_chol}
+\end{figure}
+
+\textbf{Observations:}
+\begin{itemize}
+    \item Education shows a protective gradient—higher education correlates with lower diabetic prevalence
+    \item High cholesterol shows a pattern similar to high blood pressure—strong association with diabetes
+\end{itemize}
+
+\newpage
+%===============================================================================
+\section{Dataset Preparation for Machine Learning}
+%===============================================================================
+
+\subsection{Data Splitting Strategy}
+A three-way split was implemented to enable proper model development and evaluation:
+
+\begin{table}[H]
+\centering
+\caption{Data Splitting Configuration}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Set} & \textbf{Purpose} & \textbf{Proportion} \\
+\midrule
+Training Set & Model fitting & 60\% \\
+Validation Set & Hyperparameter tuning & 20\% \\
+Test Set & Final unbiased evaluation & 20\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Stratification}
+The split was performed using \texttt{caret::createDataPartition()} with the target variable \texttt{Diabetes\_012} to ensure that class proportions are preserved in all subsets. This is critical given the class imbalance.
+
+\subsection{Sample Sizes}
+\begin{verbatim}
+Train set: ~152,208 observations
+Validation set: ~50,736 observations
+Test set: ~50,736 observations
+\end{verbatim}
+
+\subsection{Feature Set for Modeling}
+The following 11 features were selected based on domain knowledge and exploratory analysis:
+\begin{enumerate}
+    \item HighBP, HighChol, BMI, Smoker
+    \item PhysActivity, Fruits, Veggies
+    \item PhysHlth, GenHlth, Age, Education
+\end{enumerate}
+
+\subsection{Target Variable Variants}
+Two target configurations were prepared:
+\begin{enumerate}
+    \item \textbf{Multi-class (3 classes):} For Multinomial Logistic Regression
+    \item \textbf{Binary:} Healthy (0) vs Diabetic (1+2) for Decision Tree
+\end{enumerate}
+
+\newpage
+%===============================================================================
+\section{Data Analytics Techniques}
+%===============================================================================
+
+Four distinct analytics techniques were implemented, each serving a specific analytical purpose.
+
+\subsection{Model 1: Apriori Association Rule Mining}
+
+\subsubsection{Justification}
+\begin{itemize}
+    \item \textbf{Discovery-oriented:} Reveals hidden patterns and co-occurrences in the data
+    \item \textbf{Interpretable:} Rules like ``IF HighBP=Yes AND HighChol=Yes THEN Diabetes=Diabetic'' are easily understood by healthcare professionals
+    \item \textbf{Non-parametric:} Makes no assumptions about data distributions
+\end{itemize}
+
+\subsubsection{Configuration}
+\begin{table}[H]
+\centering
+\caption{Apriori Algorithm Parameters}
+\begin{tabular}{ll}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Minimum Support & 0.01 (1\% of transactions) \\
+Minimum Confidence & 0.60 (60\% rule reliability) \\
+Minimum Length & 2 items \\
+Target Consequents & Diabetes=Diabetic, PreDiabetic, Healthy \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Example Rules Discovered}
+\begin{verbatim}
+{HighBP=Yes, HighChol=Yes, GenHlth=5} => {Diabetes=Diabetic}
+    Support: 0.015, Confidence: 0.72, Lift: 4.1
+
+{PhysActivity=Yes, HighBP=No, HighChol=No} => {Diabetes=Healthy}
+    Support: 0.12, Confidence: 0.91, Lift: 1.08
+\end{verbatim}
+
+%---
+\subsection{Model 2: ID3 Decision Tree (CART Implementation)}
+
+\subsubsection{Justification}
+\begin{itemize}
+    \item \textbf{Interpretability:} Produces flowchart-like decision rules
+    \item \textbf{Handles mixed data:} Works with both categorical and continuous features
+    \item \textbf{Feature importance:} Implicitly ranks features by split information gain
+    \item \textbf{Clinical applicability:} Decision paths can be directly translated to screening criteria
+\end{itemize}
+
+\subsubsection{Configuration}
+\begin{itemize}
+    \item Algorithm: CART (via \texttt{rpart}), functionally similar to ID3
+    \item Splitting criterion: Gini impurity
+    \item Minimum split: 20 observations
+    \item Complexity parameter (cp): 0.001
+    \item Class balancing: ROSE oversampling applied to training data
+\end{itemize}
+
+%---
+\subsection{Model 3: K-Means Clustering}
+
+\subsubsection{Justification}
+\begin{itemize}
+    \item \textbf{Unsupervised exploration:} Discovers natural groupings without using labels
+    \item \textbf{Complementary analysis:} Validates whether clinical diabetes categories align with data-driven clusters
+    \item \textbf{Risk profiling:} Can identify ``high-risk'', ``medium-risk'', and ``low-risk'' patient profiles
+\end{itemize}
+
+\subsubsection{Configuration}
+\begin{itemize}
+    \item Number of clusters (K): 3 (matching diabetes categories)
+    \item Initialization: K-means++ (nstart=25)
+    \item Maximum iterations: 100
+    \item Features: HighBP, HighChol, BMI, Smoker, PhysActivity, Fruits, Veggies, PhysHlth (standardized)
+\end{itemize}
+
+%---
+\subsection{Model 4: Multinomial Logistic Regression}
+
+\subsubsection{Justification}
+\begin{itemize}
+    \item \textbf{Multi-class native:} Directly models 3-class outcome without binarization
+    \item \textbf{Probabilistic output:} Provides probability estimates for each class
+    \item \textbf{Coefficient interpretation:} Quantifies the effect of each feature as odds ratios
+    \item \textbf{Benchmark model:} Serves as a statistical baseline for comparison
+\end{itemize}
+
+\subsubsection{Configuration}
+\begin{itemize}
+    \item Algorithm: Multinomial logit via \texttt{nnet::multinom()}
+    \item Reference class: Healthy (0)
+    \item Maximum iterations: 200
+    \item Regularization: None (standard maximum likelihood)
+\end{itemize}
+
+\subsection{Summary: Technique Selection Rationale}
+\begin{table}[H]
+\centering
+\caption{Analytics Techniques Comparison}
+\begin{tabular}{p{3cm}p{4cm}p{5cm}}
+\toprule
+\textbf{Technique} & \textbf{Type} & \textbf{Primary Purpose} \\
+\midrule
+Apriori & Unsupervised / Association & Discover co-occurrence patterns \\
+Decision Tree (ID3) & Supervised / Classification & Interpretable risk rules \\
+K-Means & Unsupervised / Clustering & Identify patient subgroups \\
+Logistic Regression & Supervised / Probabilistic & Probabilistic risk scoring \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\newpage
+%===============================================================================
+\section{Performance Measures and Evaluation}
+%===============================================================================
+
+\subsection{Metrics Used}
+
+\subsubsection{Classification Metrics}
+\begin{itemize}
+    \item \textbf{Accuracy:} $\frac{TP + TN}{TP + TN + FP + FN}$ -- Overall correctness
+    \item \textbf{Sensitivity (Recall):} $\frac{TP}{TP + FN}$ -- Ability to detect positive cases
+    \item \textbf{Specificity:} $\frac{TN}{TN + FP}$ -- Ability to detect negative cases
+    \item \textbf{F1-Score:} $2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$ -- Harmonic mean
+    \item \textbf{AUC-ROC:} Area under the Receiver Operating Characteristic curve
+\end{itemize}
+
+\subsubsection{Clustering Metrics}
+\begin{itemize}
+    \item \textbf{Cluster Purity:} $\frac{1}{N}\sum_{k} \max_j |C_k \cap L_j|$ -- Proportion of correctly clustered points
+\end{itemize}
+
+\subsubsection{Association Rule Metrics}
+\begin{itemize}
+    \item \textbf{Support:} Frequency of itemset in transactions
+    \item \textbf{Confidence:} Conditional probability of consequent given antecedent
+    \item \textbf{Lift:} Ratio of observed support to expected support under independence
+\end{itemize}
+
+\subsection{Model Performance Results}
+
+\begin{table}[H]
+\centering
+\caption{Model Performance Summary}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Val Accuracy} & \textbf{Test Accuracy} & \textbf{AUC/Purity} & \textbf{Notes} \\
+\midrule
+Decision Tree & $69.16\%$ & $68.88\%$ & AUC $= 0.7497$ & Binary target \\
+Logistic Regression & $80.20\%$ & $80.35\%$ & Macro-F1 $= 0.5716$ & Multi-class \\
+K-Means & -- & -- & Purity $= 79.65\%$ & Unsupervised \\
+Apriori & -- & -- & 3,683 rules (Lift $> 1.2$) & Rule discovery \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Decision Tree Detailed Evaluation}
+
+\begin{table}[H]
+\centering
+\caption{Decision Tree Confusion Matrix (Test Set)}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Predicted / Actual} & \textbf{Healthy} & \textbf{Diabetic} \\
+\midrule
+Healthy & 20,088 & 2,169 \\
+Diabetic & 9,304 & 5,301 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Key observations:
+\begin{itemize}
+    \item Sensitivity: The model successfully identifies a significant portion of diabetic individuals
+    \item Specificity: Good at confirming healthy individuals
+    \item AUC $> 0.70$ indicates acceptable discriminative ability
+\end{itemize}
+
+\subsection{Logistic Regression Evaluation}
+\begin{itemize}
+    \item High overall accuracy ($80.35\%$) driven by majority class (Healthy)
+    \item Macro-F1 is lower due to difficulty predicting the minority Pre-diabetic class
+    \item Model excels at Healthy vs Diabetic discrimination but struggles with Pre-diabetic
+\end{itemize}
+
+\subsection{K-Means Evaluation}
+\begin{itemize}
+    \item Cluster purity $= 79.65\%$ indicates good alignment with clinical categories
+    \item Clusters primarily separated by BMI and PhysHlth patterns
+    \item Useful for patient profiling but not direct classification
+\end{itemize}
+
+\subsection{Apriori Evaluation}
+\begin{itemize}
+    \item Generated numerous high-confidence rules (Lift $> 3$)
+    \item Top rules involve HighBP, HighChol, and poor GenHlth
+    \item Clinical utility: Rules can inform screening checklists
+\end{itemize}
+
+\newpage
+%===============================================================================
+\section{Discussion and Key Findings}
+%===============================================================================
+
+\subsection{Top Risk Factors Identified}
+
+Based on the combined evidence from hypothesis testing, visualizations, and modeling, the following risk factors emerged as most significant:
+
+\begin{enumerate}
+    \item \textbf{High Blood Pressure (HighBP)}
+    \begin{itemize}
+        \item Cramér's V: Highest among binary predictors
+        \item Diabetic prevalence: 3x higher in HighBP=Yes group
+        \item Appears in top Apriori rules and top Decision Tree splits
+    \end{itemize}
+    
+    \item \textbf{High Cholesterol (HighChol)}
+    \begin{itemize}
+        \item Strong comorbidity signal consistent with metabolic syndrome
+        \item Similar effect magnitude to HighBP
+        \item Combined with HighBP, shows multiplicative risk
+    \end{itemize}
+    
+    \item \textbf{BMI (Body Mass Index)}
+    \begin{itemize}
+        \item Clear dose-response relationship with diabetes status
+        \item Key feature in Decision Tree splits
+        \item Most actionable continuous predictor
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Modifiable vs Non-Modifiable Factors}
+
+\begin{table}[H]
+\centering
+\caption{Risk Factor Classification}
+\begin{tabular}{ll}
+\toprule
+\textbf{Modifiable} & \textbf{Non-Modifiable} \\
+\midrule
+BMI (weight management) & Age \\
+Physical Activity & (Genetics -- not in dataset) \\
+Diet (Fruits, Veggies) & \\
+Smoking cessation & \\
+BP/Cholesterol management & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Public Health Implications}
+
+\begin{enumerate}
+    \item \textbf{Targeted Screening:} Adults with HighBP + HighChol + Age $> 50$ should be prioritized for glucose testing
+    
+    \item \textbf{Lifestyle Interventions:} Programs promoting:
+    \begin{itemize}
+        \item Weight reduction (target BMI $< 25$)
+        \item Regular physical activity (30+ minutes/day)
+        \item Improved diet quality
+    \end{itemize}
+    
+    \item \textbf{Health Education:} Higher education correlates with lower risk—health literacy programs can help underserved populations
+    
+    \item \textbf{Co-morbidity Management:} Treating hypertension and hyperlipidemia may have downstream benefits for diabetes prevention
+\end{enumerate}
+
+\subsection{Model Comparison and Recommendations}
+
+\begin{itemize}
+    \item \textbf{For Interpretation:} Decision Trees provide the most actionable clinical rules
+    \item \textbf{For Risk Scoring:} Logistic Regression provides probability estimates useful for risk stratification
+    \item \textbf{For Pattern Discovery:} Apriori reveals co-occurrence patterns not captured by predictive models
+    \item \textbf{For Patient Segmentation:} K-Means can identify distinct risk profiles for personalized interventions
+\end{itemize}
+
+\subsection{Limitations}
+
+\begin{enumerate}
+    \item \textbf{Self-Reported Data:} Survey responses may contain recall bias and social desirability bias
+    \item \textbf{Cross-Sectional Design:} Cannot establish causality, only associations
+    \item \textbf{Class Imbalance:} Pre-diabetic class ($<2\%$) is severely underrepresented
+    \item \textbf{Missing Clinical Markers:} Key biomarkers (HbA1c, fasting glucose) are not available
+\end{enumerate}
+
+\subsection{Future Directions}
+
+\begin{enumerate}
+    \item Incorporate additional BRFSS years for temporal validation
+    \item Apply ensemble methods (Random Forest, XGBoost) for improved predictive performance
+    \item Develop a web-based risk calculator for public use
+    \item Validate findings with clinical cohort data containing biomarker measurements
+\end{enumerate}
+
+\newpage
+%===============================================================================
+\section{Conclusion}
+%===============================================================================
+
+This project successfully applied Big Data Analytics techniques to the CDC BRFSS 2015 Diabetes Health Indicators dataset. Through rigorous statistical testing, comprehensive visualization, and multiple modeling approaches, we identified key risk factors for diabetes:
+
+\begin{itemize}
+    \item \textbf{High Blood Pressure} and \textbf{High Cholesterol} are the strongest predictors
+    \item \textbf{BMI} shows a clear graded relationship with diabetes severity
+    \item \textbf{Physical Activity} and \textbf{Education} have protective effects
+    \item \textbf{Age} is a critical non-modifiable risk factor
+\end{itemize}
+
+The combination of interpretable models (Decision Trees, Association Rules) and probabilistic models (Logistic Regression) provides a comprehensive toolkit for both clinical decision support and public health policy-making.
+
+The findings support targeted interventions focusing on:
+\begin{enumerate}
+    \item Blood pressure and cholesterol management
+    \item Weight reduction programs
+    \item Physical activity promotion
+    \item Health education for underserved populations
+\end{enumerate}
+
+By leveraging population-level survey data, health systems can implement cost-effective screening strategies that do not require invasive laboratory tests, thereby reaching a broader population at risk for diabetes.
+
+\newpage
+%===============================================================================
+\section*{References}
+%===============================================================================
+\begin{enumerate}
+    \item CDC Diabetes Health Indicators Dataset. UCI Machine Learning Repository. \\
+    \url{https://archive.ics.uci.edu/dataset/891/cdc+diabetes+health+indicators}
+    
+    \item Centers for Disease Control and Prevention. Behavioral Risk Factor Surveillance System (BRFSS). \\
+    \url{https://www.cdc.gov/brfss/}
+    
+    \item Wickham, H. et al. (2019). Welcome to the Tidyverse. \textit{JOSS}, 4(43), 1686.
+    
+    \item Therneau, T., Atkinson, B. (2022). rpart: Recursive Partitioning and Regression Trees. R package.
+    
+    \item Hahsler, M. et al. (2023). arules: Mining Association Rules and Frequent Itemsets. R package.
+\end{enumerate}
+
+%===============================================================================
+\end{document}
